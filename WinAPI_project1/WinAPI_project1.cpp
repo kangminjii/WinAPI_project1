@@ -1,6 +1,6 @@
 ﻿// WinAPI_project1.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
-
+#define _CRT_SECURE_NO_WARNINGS
 #include "framework.h"
 #include "WinAPI_project1.h"
 
@@ -74,8 +74,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINAPIPROJECT1));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.hCursor        = LoadCursor(nullptr, IDC_IBEAM);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+3);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_WINAPIPROJECT1);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
@@ -98,7 +98,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+      200, 300, 600, 400, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -123,8 +123,33 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    PAINTSTRUCT ps;
+    HDC hdc;
+
+    static TCHAR str[10][128];
+    static TCHAR save[10][128];
+    static int count, yPos, line;
+    static SIZE size;
+
     switch (message)
     {
+    case WM_CREATE : // 초기화 값 세팅
+        count = 0;
+        yPos = 100;
+        line = 0;
+        CreateCaret(hWnd, NULL, 5, 15);
+        ShowCaret(hWnd);
+        break;
+    case WM_KEYDOWN: // 눌리면 발생
+    {
+        int breakpoint = 999;
+    }
+        break;
+    case WM_KEYUP: // 눌렀다 뗄때 발생
+    {
+        int breakpoint = 999;
+    }
+        break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -142,15 +167,58 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+    case WM_CHAR:
+    {
+        int breakpoint = 999;
+        
+       
+        if (wParam == VK_BACK && count > 0)
+        {
+            count--;
+        }
+        else if (wParam == VK_RETURN)
+        {
+            for (int i = 0; i < line; i++)
+            {
+                _tcscpy(str[i], str[i + 1]);
+            }
+            
+            line++;
+            count = 0;
+            if (line == 10)   line = 0;
+        }
+        else
+        {
+            str[line][count++] = wParam;
+        }
+        str[line][count] = NULL;
+        InvalidateRect(hWnd, NULL, TRUE);
+
+    }
+    break;
     case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+            hdc = BeginPaint(hWnd, &ps);
+            
+            RECT rc = { 100, 150, 300, 550 };
+
+            GetTextExtentPoint(hdc, str[line], _tcslen(str[line]), &size);
+
+
+            for (int i = 0; i <= line; i++)
+            {
+                TextOut(hdc, 100, yPos + 20*i, str[i], _tcslen(str[line]));
+
+            }
+            SetCaretPos(100 + size.cx, yPos + 20 * line);
+
+           
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_DESTROY:
+        HideCaret(hWnd);
+        DestroyCaret();
         PostQuitMessage(0);
         break;
     default:
@@ -178,3 +246,10 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
+
+/*
+Q1. 채팅창에 문자열을 치고 엔터키를 누르면 문자열이 한칸 올라가 표시되고 
+    그다음에 입력하는 데이터들은 다음줄에 보여지도록 코드를 작성하라.
+    채팅 최대 목록은 10개로 제한한다.
+*/
