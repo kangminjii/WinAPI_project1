@@ -133,7 +133,15 @@
     <ClInclude Include="WinAPI_project1.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WinAPI_project1.cpp" />
+    <ClCompile Include="20230628_도형그리기.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="20230626_채팅창.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="템플릿.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WinAPI_project1.rc" />

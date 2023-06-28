@@ -170,7 +170,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CHAR:
     {
         int breakpoint = 999;
-        
        
         if (wParam == VK_BACK && count > 0)
         {
@@ -178,18 +177,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         else if (wParam == VK_RETURN)
         {
-            for (int i = 0; i < line; i++)
+            if (line < 10)   line++;
+            else
             {
-                _tcscpy(str[i], str[i + 1]);
+                for (int i = 0; i < line; i++)
+                {
+                    _tcscpy(str[i], str[i + 1]);
+                }
             }
             
-            line++;
+            size.cx = 0;
             count = 0;
-            if (line == 10)   line = 0;
         }
         else
         {
             str[line][count++] = wParam;
+            if (count > 127) count = 0;
         }
         str[line][count] = NULL;
         InvalidateRect(hWnd, NULL, TRUE);
@@ -200,19 +203,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             hdc = BeginPaint(hWnd, &ps);
             
-            RECT rc = { 100, 150, 300, 550 };
-
-            GetTextExtentPoint(hdc, str[line], _tcslen(str[line]), &size);
-
-
-            for (int i = 0; i <= line; i++)
+            for (int i = 0; i <10; i++)
             {
-                TextOut(hdc, 100, yPos + 20*i, str[i], _tcslen(str[line]));
-
+                TextOut(hdc, 100, yPos - 20*(line -i), str[i], _tcslen(str[line]));
+                GetTextExtentPoint(hdc, str[line], _tcslen(str[line]), &size);
+                SetCaretPos(100 + size.cx, yPos);
             }
-            SetCaretPos(100 + size.cx, yPos + 20 * line);
 
-           
+           // TextOut(hdc, 100, yPos, str[10], _tcslen(str[10]));
             EndPaint(hWnd, &ps);
         }
         break;

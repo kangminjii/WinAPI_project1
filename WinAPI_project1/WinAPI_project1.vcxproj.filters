@@ -29,7 +29,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="WinAPI_project1.cpp">
+    <ClCompile Include="20230626_채팅창.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="20230628_도형그리기.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="템플릿.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
