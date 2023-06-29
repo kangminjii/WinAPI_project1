@@ -3,8 +3,24 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "framework.h"
 #include "WinAPI_project1.h"
+#include <cmath>
 
 #define MAX_LOADSTRING 100
+#define timer_ID_1 11
+#define timer_ID_2 12
+const int circleRadius = 50;
+
+double LengthPts(POINT pt1, POINT pt2)
+{
+    return (sqrt((float)(pt2.x - pt1.x) * (pt2.x - pt1.x) + (pt2.y - pt1.y) * (pt2.y - pt1.y)));
+}
+
+BOOL InCircle(POINT pt1, POINT pt2)
+{
+    if (LengthPts(pt1, pt2) < circleRadius)  return TRUE;
+
+    return FALSE;
+}
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -126,29 +142,81 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
-    static TCHAR str[100];
-    static int count, yPos, line;
-    static SIZE size;
+    static POINT ptCurPos;
+    static POINT ptMousePos;
+    static RECT rectView;
+   
+    static bool bFlag;
 
     switch (message)
     {
     case WM_CREATE: // 초기화 값 세팅
-        count = 0;
-        yPos = 100;
-        line = 0;
-        CreateCaret(hWnd, NULL, 5, 15);
-        ShowCaret(hWnd);
-        break;
+    {
+        ptCurPos.x = 100;
+        ptCurPos.y = 100;
+        bFlag = FALSE;
+        GetClientRect(hWnd, &rectView); // 윈도우창 크기값을 rectView에 저장함
+        //SetTimer(hWnd, timer_ID_1, 500, NULL);
+        //SetTimer(hWnd, timer_ID_2, 1000, NULL);
+    }
+    break;
+
+    case WM_TIMER: // 타이머 이벤트, 타이머는 일이 바쁘지 않을때만 잘 작동됨
+    {
+        if (wParam == timer_ID_1)
+        {
+            ptCurPos.x += circleRadius;
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+        if (wParam == timer_ID_2)
+        {
+            ptCurPos.y += circleRadius;
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+    }
+    break;
+
     case WM_KEYDOWN: // 눌리면 발생
     {
-        int breakpoint = 999;
+        if(wParam == VK_RIGHT || wParam == VK_LEFT || wParam == VK_UP || wParam == VK_DOWN)
+            bFlag = TRUE;
+
+        // 화면 경계선 밖으로 못나가게 정함
+        if (wParam == VK_RIGHT)
+        {
+            ptCurPos.x += circleRadius;
+            if (ptCurPos.x + circleRadius > rectView.right)
+                ptCurPos.x = rectView.right - circleRadius;
+        }
+        else if (wParam == VK_LEFT)
+        {
+            ptCurPos.x -= circleRadius;
+            if (ptCurPos.x - circleRadius < rectView.left)
+                ptCurPos.x = rectView.left + circleRadius;
+        }
+        else if (wParam == VK_UP)
+        {
+            ptCurPos.y -= circleRadius;
+            if (ptCurPos.y - circleRadius < rectView.top)
+                ptCurPos.y = rectView.top + circleRadius;
+        }
+        else if (wParam == VK_DOWN)
+        {
+            ptCurPos.y += circleRadius;
+            if (ptCurPos.y + circleRadius > rectView.bottom)
+                ptCurPos.y = rectView.bottom - circleRadius;
+        }
+        InvalidateRect(hWnd, NULL, TRUE);
     }
     break;
+
     case WM_KEYUP: // 눌렀다 뗄때 발생
     {
-        int breakpoint = 999;
+        bFlag = FALSE;
+        InvalidateRect(hWnd, NULL, TRUE);
     }
     break;
+
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -166,34 +234,55 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
+
     case WM_CHAR:
     {
-        int breakpoint = 999;
-
-        if (wParam == VK_BACK && count > 0)
-            count--;
-        else
-            str[count++] = wParam;
-        str[count] = NULL;
-        InvalidateRect(hWnd, NULL, TRUE);
-
     }
     break;
+
+    case WM_LBUTTONDOWN:
+    {
+        ptMousePos.x = LOWORD(lParam);
+        ptMousePos.y = HIWORD(lParam);
+        if (InCircle(ptMousePos, ptCurPos))
+            bFlag = TRUE;
+        InvalidateRect(hWnd, NULL, TRUE);
+    }
+    break;
+
+    case WM_LBUTTONUP :
+    {
+        bFlag = FALSE;
+        InvalidateRect(hWnd, NULL, TRUE);
+    }
+    break;
+
+    case WM_MOUSEMOVE :
+    {
+        if (bFlag)
+        {
+            ptCurPos.x = LOWORD(lParam);
+            ptCurPos.y = HIWORD(lParam);
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
+    }
+    break;
+
     case WM_PAINT:
     {
         hdc = BeginPaint(hWnd, &ps);
 
-        GetTextExtentPoint(hdc, str, _tcslen(str), &size);
-        TextOut(hdc, 100, yPos, str, _tcslen(str));
+        if (bFlag) // 키를 누를때만 원에 색칠되게함
+            SelectObject(hdc, GetStockObject(LTGRAY_BRUSH));
 
+        Ellipse(hdc, ptCurPos.x - circleRadius, ptCurPos.y - circleRadius, ptCurPos.x + circleRadius, ptCurPos.y + circleRadius);
 
-        //SetCaretPos(100 + size.cx, yPos + 20 * line);
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
-        //HideCaret(hWnd);
-        DestroyCaret();
+        KillTimer(hWnd, timer_ID_1);
+
         PostQuitMessage(0);
         break;
     default:

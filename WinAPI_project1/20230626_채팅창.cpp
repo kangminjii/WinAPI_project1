@@ -55,8 +55,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
-
-
 //
 //  함수: MyRegisterClass()
 //
@@ -98,7 +96,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      200, 300, 600, 400, nullptr, nullptr, hInstance, nullptr);
+      400, 300, 800, 600, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -127,95 +125,94 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     HDC hdc;
 
     static TCHAR str[10][128];
-    static TCHAR save[10][128];
-    static int count, yPos, line;
+    static TCHAR first[128];
+    static int count, yPos, line; // row start
     static SIZE size;
 
     switch (message)
     {
     case WM_CREATE : // 초기화 값 세팅
         count = 0;
-        yPos = 100;
+        yPos = 200;
         line = 0;
         CreateCaret(hWnd, NULL, 5, 15);
-        ShowCaret(hWnd);
         break;
     case WM_KEYDOWN: // 눌리면 발생
     {
-        int breakpoint = 999;
     }
         break;
     case WM_KEYUP: // 눌렀다 뗄때 발생
     {
-        int breakpoint = 999;
     }
         break;
     case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // 메뉴 선택을 구문 분석합니다:
+        switch (wmId)
         {
-            int wmId = LOWORD(wParam);
-            // 메뉴 선택을 구문 분석합니다:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
         }
-        break;
+    }
+    break;
     case WM_CHAR:
     {
-        int breakpoint = 999;
-       
         if (wParam == VK_BACK && count > 0)
         {
             count--;
         }
         else if (wParam == VK_RETURN)
         {
-            if (line < 10)   line++;
+            count = 0;
+            if (line < 10)
+            {
+                _tcscpy(str[line], first);
+                line++;
+            }
             else
             {
-                for (int i = 0; i < line; i++)
+                //line = 0;
+                for (int i = 0; i < 9; i++)
                 {
                     _tcscpy(str[i], str[i + 1]);
                 }
+                _tcscpy(str[9], first);
+
             }
-            
-            size.cx = 0;
-            count = 0;
         }
         else
         {
-            str[line][count++] = wParam;
-            if (count > 127) count = 0;
+            first[count++] = wParam;
         }
-        str[line][count] = NULL;
+        first[count] = NULL;
         InvalidateRect(hWnd, NULL, TRUE);
-
     }
     break;
     case WM_PAINT:
-        {
-            hdc = BeginPaint(hWnd, &ps);
+    {
+        hdc = BeginPaint(hWnd, &ps);
             
-            for (int i = 0; i <10; i++)
-            {
-                TextOut(hdc, 100, yPos - 20*(line -i), str[i], _tcslen(str[line]));
-                GetTextExtentPoint(hdc, str[line], _tcslen(str[line]), &size);
-                SetCaretPos(100 + size.cx, yPos);
-            }
+        GetTextExtentPoint(hdc, str[line], _tcslen(str[line]), &size);
 
-           // TextOut(hdc, 100, yPos, str[10], _tcslen(str[10]));
-            EndPaint(hWnd, &ps);
+        for (int i = 0; i < 10; i++)
+        {
+            TextOut(hdc, 100, 20*i, str[i], _tcslen(str[i]));
         }
-        break;
+
+        TextOut(hdc, 100, yPos + 20, first, _tcslen(first));
+
+        SetCaretPos(100 + size.cx, yPos + 20);
+        EndPaint(hWnd, &ps);
+    }
+    break;
     case WM_DESTROY:
-        HideCaret(hWnd);
         DestroyCaret();
         PostQuitMessage(0);
         break;

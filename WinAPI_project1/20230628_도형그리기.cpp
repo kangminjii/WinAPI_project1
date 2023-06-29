@@ -218,7 +218,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         oldPen = (HPEN)SelectObject(hdc, hPen);
        
        /* HBRUSH hBrush, oldBrush;
-        hBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+        hBrush = (HBRUSH)GetStockObject(NULL_BRUSH); // 투명하게 색칠
         oldBrush = (HBRUSH)SelectObject(hdc, hBrush);*/
 
         POINT center = { 300, 300 };

@@ -74,7 +74,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINAPIPROJECT1));
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hCursor = LoadCursor(nullptr, IDC_IBEAM);
     wcex.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(220, 255, 100));
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINAPIPROJECT1);
     wcex.lpszClassName = szWindowClass;
@@ -125,28 +125,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
     HDC hdc;
+    HBRUSH hBrush, oldBrush; // 색칠
 
     static TCHAR str[100];
-    static int count, yPos, line;
     static SIZE size;
+    static int down, up, yPos, count;
 
     switch (message)
     {
     case WM_CREATE: // 초기화 값 세팅
-        count = 0;
+        down = 0;
+        up = 0;
         yPos = 100;
-        line = 0;
-        CreateCaret(hWnd, NULL, 5, 15);
-        ShowCaret(hWnd);
         break;
     case WM_KEYDOWN: // 눌리면 발생
     {
-        int breakpoint = 999;
+        if (wParam == VK_DOWN)
+            down = 1;
+
+        if (wParam == VK_UP)
+            up = 1;
+
+        InvalidateRect(hWnd, NULL, TRUE); // 다시 그려주기, 화면 영역 수정함수
     }
     break;
     case WM_KEYUP: // 눌렀다 뗄때 발생
     {
-        int breakpoint = 999;
+        if (wParam == VK_DOWN)
+            down = 0;
+
+        if (wParam == VK_UP)
+            up = 0;
+
+        InvalidateRect(hWnd, NULL, TRUE);
     }
     break;
     case WM_COMMAND:
@@ -168,32 +179,59 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CHAR:
     {
-        int breakpoint = 999;
-
-        if (wParam == VK_BACK && count > 0)
-            count--;
-        else
-            str[count++] = wParam;
+        str[count++] = wParam;
         str[count] = NULL;
         InvalidateRect(hWnd, NULL, TRUE);
-
     }
     break;
     case WM_PAINT:
     {
         hdc = BeginPaint(hWnd, &ps);
 
-        GetTextExtentPoint(hdc, str, _tcslen(str), &size);
-        TextOut(hdc, 100, yPos, str, _tcslen(str));
+        //GetTextExtentPoint(hdc, str, _tcslen(str), &size);
+       //TextOut(hdc, 100, yPos, str, _tcslen(str));
+
+        POINT center = { 300,300 };
+        
+        Rectangle(hdc, center.x - 75, center.y + 50, center.x - 25, center.y - 50);     // Left
+        Rectangle(hdc, center.x - 25, center.y - 50, center.x + 25, center.y - 150);    // Up
+        Rectangle(hdc, center.x + 75, center.y + 50, center.x + 25, center.y - 50);     // Right
+        Rectangle(hdc, center.x - 25, center.y + 150, center.x + 25, center.y + 50);    // Down
+        
+        if (down == 1)
+        {
+            hBrush = CreateSolidBrush(RGB(0, 0, 255));
+            oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+            Rectangle(hdc, center.x - 25, center.y + 150, center.x + 25, center.y + 50);    // Down
+        }
+        else
+        {
+            hBrush = CreateSolidBrush(RGB(255, 255, 255));
+            oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+            Rectangle(hdc, center.x - 25, center.y + 150, center.x + 25, center.y + 50);    // Down
+        }
+
+        if (up == 1)
+        {
+            hBrush = CreateSolidBrush(RGB(0, 0, 255));
+            oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+            Rectangle(hdc, center.x - 25, center.y - 50, center.x + 25, center.y - 150);    // Up
+        }
+        else
+        {
+            hBrush = CreateSolidBrush(RGB(255, 255, 255));
+            oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+            Rectangle(hdc, center.x - 25, center.y - 50, center.x + 25, center.y - 150);    // Up
+        }
 
 
-        //SetCaretPos(100 + size.cx, yPos + 20 * line);
+        SelectObject(hdc, oldBrush);
+        DeleteObject(hBrush);
+       
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
-        //HideCaret(hWnd);
-        DestroyCaret();
         PostQuitMessage(0);
         break;
     default:
@@ -221,3 +259,11 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
+/*
+Q1. p.93 문제 7
+    - 키 down, up 상태 체크
+    - 화면 갱신 이벤트 발생
+    - 상태에 다라 사각형 4개 그려주기
+*/
+
