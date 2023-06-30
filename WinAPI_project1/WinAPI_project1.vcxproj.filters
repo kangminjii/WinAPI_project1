@@ -27,6 +27,12 @@
     <ClInclude Include="WinAPI_project1.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Circle.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Square.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="20230626_채팅창.cpp">
@@ -42,6 +48,18 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="20230629_챕터3.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="20230629_챕터3_타이머.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Circle.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="20230629_도형프로젝트.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Square.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
