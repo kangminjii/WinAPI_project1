@@ -4,10 +4,13 @@
 #include "framework.h"
 #include "WinAPI_project1.h"
 #include <cmath>
+#include <commdlg.h>
+#include <stdio.h>
 
 #define MAX_LOADSTRING 100
 #define PI 3.141592
 #define degreeToRadian(degree) ((degree) * PI / 180)
+
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -20,11 +23,10 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-
-void DrawGrid(HDC hdc, POINT center, int width, int height, int count);
 void DrawCircle(HDC hdc, POINT center, int radius);
-void DrawSunFlower(HDC hdc, POINT center, int radius, int count);
-void DrawStar(HDC hdc, POINT center, int radius, int number);
+void DrawStar(HDC hdc, POINT center, int radius);
+void DrawRectangle(HDC hdc, POINT center, int width, int height);
+void OutFromFile(TCHAR filename[], HWND hwnd);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -65,7 +67,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 }
 
 
-
 //
 //  함수: MyRegisterClass()
 //
@@ -83,7 +84,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINAPIPROJECT1));
-    wcex.hCursor = LoadCursor(nullptr, IDC_IBEAM);
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(220, 255, 100));
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINAPIPROJECT1);
     wcex.lpszClassName = szWindowClass;
@@ -135,27 +136,33 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
-    static TCHAR str[100];
+    //메뉴 클릭시 도형 그리기
+    enum {CIRCLE, RECTANGLE, STAR, NONE};
+    static int selectMenu = NONE;
+  
+    //채팅창
+    static TCHAR str[10][128];
+    static TCHAR first[128];
     static int count, yPos, line;
     static SIZE size;
+
+    //마우스 위치
+    static POINT ptMousePos;
 
     switch (message)
     {
     case WM_CREATE: // 초기화 값 세팅
         count = 0;
-        yPos = 100;
+        yPos = 200;
         line = 0;
         CreateCaret(hWnd, NULL, 5, 15);
-        ShowCaret(hWnd);
         break;
     case WM_KEYDOWN: // 눌리면 발생
     {
-        int breakpoint = 999;
     }
     break;
     case WM_KEYUP: // 눌렀다 뗄때 발생
     {
-        int breakpoint = 999;
     }
     break;
     case WM_COMMAND:
@@ -164,6 +171,87 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
+        case ID_DRAW_CIRCLE:
+            // : 원 그리기
+        {
+            int temp = selectMenu;
+            int ans = MessageBox(hWnd, _T("원 그릴래?"), _T("도형 선택"), MB_YESNOCANCEL);
+            if (ans == IDYES)
+            {
+                selectMenu = CIRCLE;
+            }
+            else if (ans == IDNO)
+            {
+                selectMenu = NONE;
+            }
+            else
+            {
+                selectMenu = temp;
+            }
+            InvalidateRgn(hWnd, NULL, TRUE);
+        }
+            break;
+
+        case ID_DRAW_RECTANGLE:
+            // : 사각형 그리기
+            selectMenu = RECTANGLE;
+            InvalidateRgn(hWnd, NULL, TRUE);
+            break;
+
+        case ID_DRAW_STAR:
+            // : 별 그리기
+            selectMenu = STAR;
+            InvalidateRgn(hWnd, NULL, TRUE);
+            break;
+        
+        case ID_FILEOPEN:
+        {
+            OPENFILENAME ofn;
+
+            TCHAR filter[] = _T("Every file(*.*) \0*.*\0Text File\0*.txt;*.doc\0");
+            TCHAR lpstrFile[100] = _T("");
+            TCHAR str[100];
+
+            memset(&ofn, 0, sizeof(OPENFILENAME));
+            ofn.lStructSize = sizeof(OPENFILENAME);
+            ofn.hwndOwner = hWnd;
+            ofn.lpstrFilter = filter;
+            ofn.lpstrFile = lpstrFile;
+            ofn.nMaxFile = 100;
+            ofn.lpstrInitialDir = _T(".");
+
+            if (GetOpenFileName(&ofn) != 0)
+            {
+                _stprintf(str, _T("%s 파일을 열겠습니까?"), ofn.lpstrFile);
+                MessageBox(hWnd, str, _T("파일 선택"), MB_OK);
+                OutFromFile(ofn.lpstrFile, hWnd);
+            }
+        }
+            break;
+
+        case ID_FILESAVE:
+        {
+            OPENFILENAME ifn;
+            TCHAR lpstrFile[100] = _T("");
+            TCHAR str[100] = _T("");
+
+            // cout << 파일제목입력:
+            _stscanf(str, ifn.lpstrFile);
+            
+            memset(&ifn, 0, sizeof(OPENFILENAME));
+            ifn.lStructSize = sizeof(OPENFILENAME);
+            ifn.hwndOwner = hWnd;
+           // ifn.lpstrFilter = filter;
+           // ifn.lpstrFile = lpstrFile;
+            ifn.nMaxFile = 100;
+            ifn.lpstrInitialDir = _T(".");
+
+            if (GetOpenFileName(&ifn) != 0)
+            {
+                SaveFromChatting(ifn.lpstrFile, hWnd);
+            }
+        }
+            break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
@@ -177,65 +265,80 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CHAR:
     {
-        int breakpoint = 999;
-
         if (wParam == VK_BACK && count > 0)
+        {
             count--;
+        }
+        else if (wParam == VK_RETURN)
+        {
+            count = 0;
+            if (line < 10)
+            {
+                _tcscpy(str[line], first);
+                line++;
+            }
+            else
+            {
+                for (int i = 0; i < 9; i++)
+                {
+                    _tcscpy(str[i], str[i + 1]);
+                }
+                _tcscpy(str[9], first);
+            }
+        }
         else
-            str[count++] = wParam;
-        str[count] = NULL;
+            first[count++] = wParam;
+        first[count] = NULL;
         InvalidateRect(hWnd, NULL, TRUE);
+    }
+    break;
+    case WM_LBUTTONDOWN: // 마우스 클릭시
+    {
+        ptMousePos.x = LOWORD(lParam);
+        ptMousePos.y = HIWORD(lParam);
 
+        InvalidateRect(hWnd, NULL, TRUE);
+    }
+    break;
+        
+    case WM_LBUTTONUP: // 마우스 클릭에서 땔때
+    {
     }
     break;
     case WM_PAINT:
     {
         hdc = BeginPaint(hWnd, &ps);
 
-        GetTextExtentPoint(hdc, str, _tcslen(str), &size);
-        TextOut(hdc, 100, yPos, str, _tcslen(str));
+        switch (selectMenu)
+        {
+        case CIRCLE:
+            DrawCircle(hdc, ptMousePos, 50);
+            break;
+        case RECTANGLE:
+            DrawRectangle(hdc, ptMousePos, 100, 100); // 직사각형
+            break;
+        case STAR:
+            DrawStar(hdc, ptMousePos, 50);
+            break;
+        default:
+            break;
+        }
 
-        // 선 그리기
-        //POINT center = { 200, 200 };
-        //DrawGrid(hdc, center, 10, 10, 10);
+        GetTextExtentPoint(hdc, str[line], _tcslen(str[line]), &size);
 
-        // 원 그리기
-        //POINT center = { 200, 100 };
-        //DrawCircle(hdc, center, 50);
+        for (int i = 0; i < 10; i++)
+        {
+            TextOut(hdc, 100, 20 * i, str[i], _tcslen(str[i]));
+        }
 
-        // 해바라기 그리기
-        //POINT center = { 300, 300 };
-        //DrawSunFlower(hdc, center, 40, 10);
+        TextOut(hdc, 100, yPos + 20, first, _tcslen(first));
 
-        //Rectangle(hdc, 100, 100, 700, 500); // 직사각형
-        //POINT pt[5] = { {10,150}, {250,30}, {500,150}, {350,300}, {150,300} };
-        //Polygon(hdc, pt, 5); // 다각형
+        SetCaretPos(100 + size.cx, yPos + 20);
 
-
-        // 별 그리기
-        HPEN hPen, oldPen;
-        hPen = CreatePen(PS_DOT, 2, RGB(255, 0, 255));
-        oldPen = (HPEN)SelectObject(hdc, hPen);
-       
-       /* HBRUSH hBrush, oldBrush;
-        hBrush = (HBRUSH)GetStockObject(NULL_BRUSH); // 투명하게 색칠
-        oldBrush = (HBRUSH)SelectObject(hdc, hBrush);*/
-
-        POINT center = { 300, 300 };
-        DrawStar(hdc, center, 50, 5);
-
-        SelectObject(hdc, oldPen);
-        DeleteObject(hPen);
-      
-        /*SelectObject(hdc, oldBrush);
-        DeleteObject(hBrush);*/
-        //SetCaretPos(100 + size.cx, yPos);
-        
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
-        //HideCaret(hWnd);
         DestroyCaret();
         PostQuitMessage(0);
         break;
@@ -265,71 +368,14 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-/*
-Q1. 격자 그리기
-    DrawGrid(...) 함수 구현하라.
-    격자 위치, 격자 Width, Height,
-    격자 개수, 또는 격자 간격을 인자로 한다.
-*/
-
-void DrawGrid(HDC hdc, POINT center, int width, int height, int count)
-{
-    center.x -= width * count / 2;
-    center.y -= height * count / 2;
-
-    for (int i = 0; i <= count; i++)
-    {
-        // 세로
-        MoveToEx(hdc, center.x + width * i, center.y, NULL);
-        LineTo(hdc, center.x + width * i, center.y + height * count);
-        // 가로
-        MoveToEx(hdc, center.x, center.y + height * i, NULL);
-        LineTo(hdc, center.x + width * count, center.y + height * i);
-    }
-}
-
-/*
-Q2. 원 그리기
-    DrawCircle(...) 함수를 구현하라.
-    원의 위치, 반지름을 인자로 한다.
-*/
-
 void DrawCircle(HDC hdc, POINT center, int radius)
 {
     Ellipse(hdc, center.x - radius, center.y - radius, center.x + radius, center.y + radius);
 }
-
-/*
-Q3. 해바라기를 그리는 함수를 구현하라.
-    원을 그리기 위한 기본 정보에 외각에 그려질 원의 개수를 입력받아
-    해바라기 형식으로 그려지도록 한다.
-*/
-
-void DrawSunFlower(HDC hdc, POINT center, int radius, int count)
+void DrawRectangle(HDC hdc, POINT center, int width, int height)
 {
-    Ellipse(hdc, center.x - radius, center.y - radius, center.x + radius, center.y + radius);
-
-    double angle = 360.0 / double(count);
-    angle = degreeToRadian(angle);
-
-    double radius1 = (radius * sin(angle / 2)) / (1 - sin(angle / 2));
-    double length = radius + radius1;
-
-    for (int i = 0; i < count; i++)
-    {
-        POINT a;
-      
-        a.x = center.x + (length * sin(angle * i));
-        a.y = center.y + (length * cos(angle * i));
-        DrawCircle(hdc, a, radius1);
-        //Ellipse(hdc, a.x - radius1, a.y - radius1, a.x + radius1, a.y + radius1);
-    }
+    Rectangle(hdc, center.x - width / 2, center.y - height / 2, center.x + width / 2, center.y + height / 2);
 }
-
-/*
-Q4. 별을 그리는 함수를 구현하라.
-    별의 위치, 반지름을 인자로 받도록 한다.
-*/
 
 void DrawStar(HDC hdc, POINT center, int radius)
 {
@@ -345,13 +391,59 @@ void DrawStar(HDC hdc, POINT center, int radius)
             pt[i].x = center.x + radius * sin(angle * i);
             pt[i].y = center.y + radius * cos(angle * i);
         }
-
         if (i % 2 == 1)
         {
             pt[i].x = center.x + (radius / 2) * sin(angle * i);
             pt[i].y = center.y + (radius / 2) * cos(angle * i);
         }
-
-        Polygon(hdc, pt, 10);
     }
+
+    Polygon(hdc, pt, 10);
+}
+
+/*
+Q2. p.150 의 코드를 활용하여 "text.txt" 파일의 내용을 읽어 화면에 표시하는 코드를 작성하라.
+*/
+
+void OutFromFile(TCHAR filename[], HWND hWnd)
+{
+    FILE* fPtr;
+    HDC hdc;
+    int line;
+    TCHAR buffer[500];
+    
+    line = 0;
+    hdc = GetDC(hWnd);
+
+#ifdef _UNICODE
+    _tfopen_s(&fPtr, filename, _T("r, ccs = UNICODE"));
+#else
+    _tfopen_s(&fPtr, filename, _T("r"));
+#endif
+    while (_fgetts(buffer, 100, fPtr) != NULL)
+    {
+        if (buffer[_tcslen(buffer) - 1] == _T('\n'))
+            buffer[_tcslen(buffer) - 1] = NULL;
+        TextOut(hdc, 0, line * 20, buffer, _tcslen(buffer));
+        line++;
+    }
+    fclose(fPtr);
+    ReleaseDC(hWnd, hdc);
+}
+
+void SaveFromChatting(TCHAR filename[], HWND hWnd)
+{
+    FILE* fPtr;
+    HDC hdc;
+    int line;
+    TCHAR buffer[500];
+
+    line = 0;
+    hdc = GetDC(hWnd);
+
+
+
+
+    fclose(fPtr);
+    ReleaseDC(hWnd, hdc);
 }

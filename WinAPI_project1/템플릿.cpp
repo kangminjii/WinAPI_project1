@@ -136,17 +136,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         count = 0;
         yPos = 100;
         line = 0;
-        CreateCaret(hWnd, NULL, 5, 15);
-        ShowCaret(hWnd);
+        //CreateCaret(hWnd, NULL, 5, 15);
+        //ShowCaret(hWnd);
         break;
     case WM_KEYDOWN: // 눌리면 발생
     {
-        int breakpoint = 999;
     }
     break;
     case WM_KEYUP: // 눌렀다 뗄때 발생
     {
-        int breakpoint = 999;
     }
     break;
     case WM_COMMAND:
@@ -168,8 +166,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CHAR:
     {
-        int breakpoint = 999;
-
         if (wParam == VK_BACK && count > 0)
             count--;
         else
@@ -186,14 +182,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         GetTextExtentPoint(hdc, str, _tcslen(str), &size);
         TextOut(hdc, 100, yPos, str, _tcslen(str));
 
-
         //SetCaretPos(100 + size.cx, yPos + 20 * line);
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
         //HideCaret(hWnd);
-        DestroyCaret();
+        //DestroyCaret();
         PostQuitMessage(0);
         break;
     default:
