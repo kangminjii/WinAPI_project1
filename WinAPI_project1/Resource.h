@@ -18,6 +18,9 @@
 #define ID_DRAW_STAR                    32783
 #define ID_FILEOPEN                     32786
 #define ID_FILESAVE                     32788
+#define ID_EDITCANCEL                   32792
+#define ID_EDITCOPY                     32793
+#define ID_EDITPASTE                    32794
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -26,7 +29,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        130
-#define _APS_NEXT_COMMAND_VALUE         32789
+#define _APS_NEXT_COMMAND_VALUE         32798
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           110
 #endif

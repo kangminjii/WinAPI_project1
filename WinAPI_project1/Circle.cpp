@@ -35,3 +35,11 @@ void Circle::Draw(HDC hdc)
 {
 	Ellipse(hdc, center.x - radius, center.y - radius, center.x + radius, center.y + radius);
 }
+
+BOOL Circle::Collision(HDC hdc)
+{
+	/*if (LengthPts(pt1, pt2) < radius)  return TRUE;
+		return FALSE;
+	}*/
+	return true;
+}

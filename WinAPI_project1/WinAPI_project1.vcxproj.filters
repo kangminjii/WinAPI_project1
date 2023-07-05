@@ -33,6 +33,9 @@
     <ClInclude Include="Square.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Star.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="20230626_채팅창.cpp">
@@ -62,7 +65,16 @@
     <ClCompile Include="Square.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="20230703.cpp">
+    <ClCompile Include="20230703_윈도우메뉴.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="20230705_복사붙여넣기.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="20230705_비트맵이미지출력.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Star.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

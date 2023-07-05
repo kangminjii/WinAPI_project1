@@ -13,4 +13,6 @@ public:
 	void SetPosition(int x, int y);
 	void Update(RECT& r);
 	void Draw(HDC hdc);
+
+	BOOL Collision(HDC hdc);
 };

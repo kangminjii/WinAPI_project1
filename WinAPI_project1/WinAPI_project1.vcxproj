@@ -131,6 +131,7 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Square.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Star.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WinAPI_project1.h" />
   </ItemGroup>
@@ -151,9 +152,18 @@
     <ClCompile Include="20230629_키이벤트.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="20230703.cpp" />
+    <ClCompile Include="20230703_윈도우메뉴.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="20230705_비트맵이미지출력.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="20230705_복사붙여넣기.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Circle.cpp" />
     <ClCompile Include="Square.cpp" />
+    <ClCompile Include="Star.cpp" />
     <ClCompile Include="템플릿.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>

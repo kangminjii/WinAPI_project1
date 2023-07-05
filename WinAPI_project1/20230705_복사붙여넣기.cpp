@@ -5,9 +5,8 @@
 #include "WinAPI_project1.h"
 #include <cmath>
 
-#define MAX_LOADSTRING 100
 #define PI 3.141592
-#define degreeToRadian(degree) ((degree) * PI / 180)
+#define MAX_LOADSTRING 100
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -20,11 +19,9 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-
-void DrawGrid(HDC hdc, POINT center, int width, int height, int count);
 void DrawCircle(HDC hdc, POINT center, int radius);
-void DrawSunFlower(HDC hdc, POINT center, int radius, int count);
 void DrawStar(HDC hdc, POINT center, int radius);
+void DrawRectangle(HDC hdc, POINT center, int width, int height);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -65,7 +62,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 }
 
 
-
 //
 //  함수: MyRegisterClass()
 //
@@ -83,7 +79,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
     wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINAPIPROJECT1));
-    wcex.hCursor = LoadCursor(nullptr, IDC_IBEAM);
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(220, 255, 100));
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINAPIPROJECT1);
     wcex.lpszClassName = szWindowClass;
@@ -135,35 +131,74 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
-    static TCHAR str[100];
-    static int count, yPos, line;
-    static SIZE size;
+    // 도형 그리기
+    enum { CIRCLE, RECTANGLE, STAR, NONE };
+    static int selectMenu = NONE;
+    // 메뉴창
+    static HMENU hMenu, hSubMenu;
+    // 마우스위치
+    static POINT ptMousePos;
+
+    static bool isClicked;
+    static int paste;
+    
 
     switch (message)
     {
     case WM_CREATE: // 초기화 값 세팅
-        count = 0;
-        yPos = 100;
-        line = 0;
-        CreateCaret(hWnd, NULL, 5, 15);
-        ShowCaret(hWnd);
+       
+        paste = 0;
+        isClicked = FALSE;
+        hMenu = GetMenu(hWnd);
+        hSubMenu = GetSubMenu(hMenu, 2);
+        EnableMenuItem(hSubMenu, ID_EDITCOPY, MF_GRAYED);
+        EnableMenuItem(hSubMenu, ID_EDITPASTE, MF_GRAYED);
+
         break;
     case WM_KEYDOWN: // 눌리면 발생
     {
-        int breakpoint = 999;
     }
     break;
     case WM_KEYUP: // 눌렀다 뗄때 발생
     {
-        int breakpoint = 999;
     }
     break;
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
+
+        if (selectMenu >= 0)
+            EnableMenuItem(hSubMenu, ID_EDITCOPY, MF_ENABLED); // 복사 버튼 활성화
+       
         // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
+        case ID_EDITCOPY: // : 복사하기 버튼
+            EnableMenuItem(hSubMenu, ID_EDITCOPY, MF_GRAYED); // 복사 버튼 비활성화
+            EnableMenuItem(hSubMenu, ID_EDITPASTE, MF_ENABLED); // 붙여넣기 버튼 활성화
+            InvalidateRgn(hWnd, NULL, TRUE);
+        break;
+        case ID_EDITPASTE: // : 붙여넣기 버튼
+            paste = 1;
+            EnableMenuItem(hSubMenu, ID_EDITPASTE, MF_GRAYED); // 붙여넣기 버튼 비활성화
+            InvalidateRgn(hWnd, NULL, TRUE);
+         break;
+        case ID_DRAW_CIRCLE: // : 원 그리기
+            isClicked = TRUE;
+            selectMenu = CIRCLE;
+            InvalidateRgn(hWnd, NULL, TRUE);
+        break;
+        case ID_DRAW_RECTANGLE:  // : 사각형 그리기
+            isClicked = TRUE;
+            selectMenu = RECTANGLE;
+            InvalidateRgn(hWnd, NULL, TRUE);
+            break;
+        case ID_DRAW_STAR: // : 별 그리기
+            isClicked = TRUE;
+            selectMenu = STAR;
+            InvalidateRgn(hWnd, NULL, TRUE);
+            break;
+
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
@@ -177,66 +212,63 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CHAR:
     {
-        int breakpoint = 999;
-
-        if (wParam == VK_BACK && count > 0)
-            count--;
-        else
-            str[count++] = wParam;
-        str[count] = NULL;
+        //UINT state = GetMenuState(hSubMenu, ID_EDITCOPY, MF_BYCOMMAND);
         InvalidateRect(hWnd, NULL, TRUE);
+    }
+    break;
+    case WM_LBUTTONDOWN: // 마우스 클릭시
+    {
+        ptMousePos.x = LOWORD(lParam);
+        ptMousePos.y = HIWORD(lParam);
 
+        InvalidateRect(hWnd, NULL, TRUE);
+    }
+    break;
+
+    case WM_LBUTTONUP: // 마우스 클릭에서 땔때
+    {
     }
     break;
     case WM_PAINT:
     {
         hdc = BeginPaint(hWnd, &ps);
 
-        GetTextExtentPoint(hdc, str, _tcslen(str), &size);
-        TextOut(hdc, 100, yPos, str, _tcslen(str));
+        switch (selectMenu)
+        {
+        case CIRCLE:
+            DrawCircle(hdc, ptMousePos, 50);
+            if (paste)
+            {
+                DrawCircle(hdc, { 50, 50 }, 50);
+                paste = 0;
+            }
+            break;
+        case RECTANGLE:
+            DrawRectangle(hdc, ptMousePos, 100, 100);
+            if (paste)
+            {
+                DrawRectangle(hdc, { 50, 50 }, 100, 100);
+                paste = 0;
+            }
+            break;
+        case STAR:
+            DrawStar(hdc, ptMousePos, 50);
+            if (paste)
+            {
+                DrawStar(hdc, { 50, 50 }, 50);
+                paste = 0;
+            }
+            break;
+        default:
+            break;
+        }
+        isClicked = FALSE;
 
-        // 선 그리기
-        //POINT center = { 200, 200 };
-        //DrawGrid(hdc, center, 10, 10, 10);
-
-        // 원 그리기
-        //POINT center = { 200, 100 };
-        //DrawCircle(hdc, center, 50);
-
-        // 해바라기 그리기
-        //POINT center = { 300, 300 };
-        //DrawSunFlower(hdc, center, 40, 10);
-
-        //Rectangle(hdc, 100, 100, 700, 500); // 직사각형
-        //POINT pt[5] = { {10,150}, {250,30}, {500,150}, {350,300}, {150,300} };
-        //Polygon(hdc, pt, 5); // 다각형
-
-
-        // 별 그리기
-        HPEN hPen, oldPen;
-        hPen = CreatePen(PS_DOT, 2, RGB(255, 0, 255));
-        oldPen = (HPEN)SelectObject(hdc, hPen);
-       
-       /* HBRUSH hBrush, oldBrush;
-        hBrush = (HBRUSH)GetStockObject(NULL_BRUSH); // 투명하게 색칠
-        oldBrush = (HBRUSH)SelectObject(hdc, hBrush);*/
-
-        POINT center = { 300, 300 };
-        DrawStar(hdc, center, 50, 5);
-
-        SelectObject(hdc, oldPen);
-        DeleteObject(hPen);
-      
-        /*SelectObject(hdc, oldBrush);
-        DeleteObject(hBrush);*/
-        //SetCaretPos(100 + size.cx, yPos);
-        
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
-        //HideCaret(hWnd);
-        DestroyCaret();
+      
         PostQuitMessage(0);
         break;
     default:
@@ -265,76 +297,19 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-/*
-Q1. 격자 그리기
-    DrawGrid(...) 함수 구현하라.
-    격자 위치, 격자 Width, Height,
-    격자 개수, 또는 격자 간격을 인자로 한다.
-*/
-
-void DrawGrid(HDC hdc, POINT center, int width, int height, int count)
-{
-    center.x -= width * count / 2;
-    center.y -= height * count / 2;
-
-    for (int i = 0; i <= count; i++)
-    {
-        // 세로
-        MoveToEx(hdc, center.x + width * i, center.y, NULL);
-        LineTo(hdc, center.x + width * i, center.y + height * count);
-        // 가로
-        MoveToEx(hdc, center.x, center.y + height * i, NULL);
-        LineTo(hdc, center.x + width * count, center.y + height * i);
-    }
-}
-
-/*
-Q2. 원 그리기
-    DrawCircle(...) 함수를 구현하라.
-    원의 위치, 반지름을 인자로 한다.
-*/
-
 void DrawCircle(HDC hdc, POINT center, int radius)
 {
     Ellipse(hdc, center.x - radius, center.y - radius, center.x + radius, center.y + radius);
 }
-
-/*
-Q3. 해바라기를 그리는 함수를 구현하라.
-    원을 그리기 위한 기본 정보에 외각에 그려질 원의 개수를 입력받아
-    해바라기 형식으로 그려지도록 한다.
-*/
-
-void DrawSunFlower(HDC hdc, POINT center, int radius, int count)
+void DrawRectangle(HDC hdc, POINT center, int width, int height)
 {
-    Ellipse(hdc, center.x - radius, center.y - radius, center.x + radius, center.y + radius);
-
-    double angle = 360.0 / double(count);
-    angle = degreeToRadian(angle);
-
-    double radius1 = (radius * sin(angle / 2)) / (1 - sin(angle / 2));
-    double length = radius + radius1;
-
-    for (int i = 0; i < count; i++)
-    {
-        POINT a;
-      
-        a.x = center.x + (length * sin(angle * i));
-        a.y = center.y + (length * cos(angle * i));
-        DrawCircle(hdc, a, radius1);
-        //Ellipse(hdc, a.x - radius1, a.y - radius1, a.x + radius1, a.y + radius1);
-    }
+    Rectangle(hdc, center.x - width / 2, center.y - height / 2, center.x + width / 2, center.y + height / 2);
 }
-
-/*
-Q4. 별을 그리는 함수를 구현하라.
-    별의 위치, 반지름을 인자로 받도록 한다.
-*/
 
 void DrawStar(HDC hdc, POINT center, int radius)
 {
     double angle = 360 / 10;
-    angle = degreeToRadian(angle);
+    angle = (angle)*PI / 180;
 
     POINT pt[10] = {};
 
@@ -345,13 +320,23 @@ void DrawStar(HDC hdc, POINT center, int radius)
             pt[i].x = center.x + radius * sin(angle * i);
             pt[i].y = center.y + radius * cos(angle * i);
         }
-
         if (i % 2 == 1)
         {
             pt[i].x = center.x + (radius / 2) * sin(angle * i);
             pt[i].y = center.y + (radius / 2) * cos(angle * i);
         }
-
-        Polygon(hdc, pt, 10);
     }
+
+    Polygon(hdc, pt, 10);
 }
+
+/*
+Q1.
+    1. 도형 선택
+    2. 복사 메뉴 활성
+    3. 복사 메뉴 선택
+    4. 붙여 넣기 메뉴 활성, 복사 메뉴 비활성
+    5. 붙여 넣기 메뉴 선택, 붙여 넣기 메뉴 비활성
+    6. 선택된 도형 복사해서 좌상단에 그려주기
+
+*/

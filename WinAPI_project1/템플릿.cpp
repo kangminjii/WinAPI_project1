@@ -175,6 +175,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     }
     break;
+    case WM_LBUTTONDOWN: // 마우스 클릭시
+    {
+    }
+    break;
+
+    case WM_LBUTTONUP: // 마우스 클릭에서 땔때
+    {
+    }
+    break;
     case WM_PAINT:
     {
         hdc = BeginPaint(hWnd, &ps);

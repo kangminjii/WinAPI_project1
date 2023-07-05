@@ -204,6 +204,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             InvalidateRgn(hWnd, NULL, TRUE);
             break;
         
+ //////////////////////////////// 파일 입력한 것 다시 파일로 출력하는거 실패
         case ID_FILEOPEN:
         {
             OPENFILENAME ofn;
