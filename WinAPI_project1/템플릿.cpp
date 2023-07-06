@@ -126,18 +126,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
-    static TCHAR str[100];
-    static int count, yPos, line;
-    static SIZE size;
-
     switch (message)
     {
     case WM_CREATE: // 초기화 값 세팅
-        count = 0;
-        yPos = 100;
-        line = 0;
-        //CreateCaret(hWnd, NULL, 5, 15);
-        //ShowCaret(hWnd);
+       
         break;
     case WM_KEYDOWN: // 눌리면 발생
     {
@@ -166,13 +158,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CHAR:
     {
-        if (wParam == VK_BACK && count > 0)
-            count--;
-        else
-            str[count++] = wParam;
-        str[count] = NULL;
-        InvalidateRect(hWnd, NULL, TRUE);
-
     }
     break;
     case WM_LBUTTONDOWN: // 마우스 클릭시
@@ -188,16 +173,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         hdc = BeginPaint(hWnd, &ps);
 
-        GetTextExtentPoint(hdc, str, _tcslen(str), &size);
-        TextOut(hdc, 100, yPos, str, _tcslen(str));
-
-        //SetCaretPos(100 + size.cx, yPos + 20 * line);
         EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY:
-        //HideCaret(hWnd);
-        //DestroyCaret();
         PostQuitMessage(0);
         break;
     default:
