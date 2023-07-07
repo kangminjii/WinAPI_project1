@@ -7,6 +7,8 @@
 #define MAX_LOADSTRING 100
 
 
+// : 대화상자
+BOOL CALLBACK Dialog_Test1_Proc(HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam);
 
 
 
@@ -131,10 +133,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
+    enum { CIRCLE, RECTANGLE, STAR, NONE };
+    static int selectedMenu = NONE;
+
     switch (message)
     {
     case WM_CREATE: // 초기화 값 세팅
-       
+
         break;
     case WM_KEYDOWN: // 눌리면 발생
     {
@@ -150,6 +155,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
+        case ID_DRAW_CIRCLE:
+            //selectedMenu = CIRCLE;
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dialog_Test1_Proc);
+
+            break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
@@ -208,4 +218,66 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+BOOL CALLBACK Dialog_Test1_Proc(HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (iMsg)
+    {
+    case WM_INITDIALOG:
+    {
+        HWND hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+        EnableWindow(hBtn, FALSE);
+    }
+        return 1;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_START:
+        {
+            HDC hdc = GetDC(hDlg);
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Start"));
+            ReleaseDC(hDlg, hdc);
+
+            HWND hBtn = GetDlgItem(hDlg, IDC_START);
+            EnableWindow(hBtn, FALSE);
+
+            hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+            EnableWindow(hBtn, TRUE);
+        }
+            break;
+        case IDC_PAUSE:
+        {
+            HDC hdc = GetDC(hDlg);
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Pause"));
+            ReleaseDC(hDlg, hdc);
+
+            HWND hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+            EnableWindow(hBtn, FALSE);
+
+            hBtn = GetDlgItem(hDlg, IDC_START);
+            EnableWindow(hBtn, TRUE);
+        }
+            break;
+        case IDC_BUTTON_PRINT:
+        {
+            HDC hdc = GetDC(hDlg);
+            TextOut(hdc, 0, 0, _T("Print"), 5);
+
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Print"));
+
+            ReleaseDC(hDlg, hdc);
+        }
+        break;
+        case IDOK:
+            EndDialog(hDlg, 0);
+            break;
+        case IDC_CANCEL:
+            EndDialog(hDlg, 0);
+            break;
+        }
+        break;
+    }
+    return 0;
 }
