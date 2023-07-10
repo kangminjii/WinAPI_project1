@@ -312,7 +312,7 @@ void CreateBitmap()
     {
         hAniImage = (HBITMAP)LoadImage(NULL, TEXT("images/zero_run.bmp"), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
 
-        if (hBackImage == NULL) // 이미지가 출력되지 않을 때
+        if (hAniImage == NULL) // 이미지가 출력되지 않을 때
         {
             DWORD dwError = GetLastError();
             MessageBox(NULL, _T("이미지 로드 에러3"), _T("에러"), MB_OK);

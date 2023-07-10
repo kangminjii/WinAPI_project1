@@ -170,6 +170,9 @@
     <ClCompile Include="20230707_대화상자.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="20230710_edit_control.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Circle.cpp" />
     <ClCompile Include="Square.cpp" />
     <ClCompile Include="Star.cpp" />

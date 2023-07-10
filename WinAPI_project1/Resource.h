@@ -20,6 +20,17 @@
 #define IDC_TEXT                        1029
 #define IDC_START                       1030
 #define IDC_PAUSE                       1031
+#define IDC_BUTTON_COPY                 1032
+#define IDC_BUTTON_CLEAR                1033
+#define IDC_EDIT_INPUT                  1034
+#define IDC_EDIT_COPY                   1035
+#define IDC_CHECK_READING               1036
+#define IDC_CHECK_MUSIC                 1037
+#define IDC_CHECK_GAME                  1038
+#define IDC_RADIO_FEMALE                1039
+#define IDC_RADIO_MALE                  1040
+#define IDC_EDIT_OUTPUT                 1041
+#define IDC_BUTTON_OUTPUT               1042
 #define ID_DRAW_CIRCLE                  32781
 #define ID_DRAW_RECTANGLE               32782
 #define ID_DRAW_STAR                    32783
@@ -28,6 +39,7 @@
 #define ID_EDITCANCEL                   32792
 #define ID_EDITCOPY                     32793
 #define ID_EDITPASTE                    32794
+#define ID_COPY_DIALOG                  32799
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
@@ -36,8 +48,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
-#define _APS_NEXT_COMMAND_VALUE         32798
-#define _APS_NEXT_CONTROL_VALUE         1032
+#define _APS_NEXT_COMMAND_VALUE         32800
+#define _APS_NEXT_CONTROL_VALUE         1043
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
