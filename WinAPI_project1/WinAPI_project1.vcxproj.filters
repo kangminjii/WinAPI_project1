@@ -89,7 +89,7 @@
     <ClCompile Include="20230710_edit_control.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="20230712.cpp">
+    <ClCompile Include="20230712_dialog_기능들.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

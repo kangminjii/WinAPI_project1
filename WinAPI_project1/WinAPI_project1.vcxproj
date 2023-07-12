@@ -173,7 +173,9 @@
     <ClCompile Include="20230710_edit_control.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="20230712.cpp" />
+    <ClCompile Include="20230712_dialog_기능들.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Circle.cpp" />
     <ClCompile Include="Square.cpp" />
     <ClCompile Include="Star.cpp" />
