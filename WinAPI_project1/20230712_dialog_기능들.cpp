@@ -5,7 +5,7 @@
 #include "WinAPI_project1.h"
 
 #define MAX_LOADSTRING 100
-
+BOOL CALLBACK Dialog_Test1_Proc(HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam);
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -127,25 +127,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
+   
+
     switch (message)
     {
     case WM_CREATE: // 초기화 값 세팅
-       
         break;
-    case WM_KEYDOWN: // 눌리면 발생
-    {
-    }
-    break;
-    case WM_KEYUP: // 눌렀다 뗄때 발생
-    {
-    }
-    break;
+   
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
         // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
+        case ID_COPY_DIALOG:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dialog_Test1_Proc);
+            break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
@@ -204,4 +201,162 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+// 다이얼로그1
+BOOL CALLBACK Dialog_Test1_Proc(HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+    // 0710
+    static int Check[3], Radio;
+    TCHAR hobby[][30] = { _T("독서"), _T("음악감상"), _T("게임") };
+    TCHAR sex[][30] = { _T("여성"), _T("남성") };
+    TCHAR output[200];
+
+    // 0712
+    static HWND hCombo;
+    static int selection;
+    TCHAR name[20];
+
+    static HWND hList;
+    static int selectionList;
+
+    switch (iMsg)
+    {
+    case WM_INITDIALOG:
+    {
+        // 0710
+        HWND hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+        EnableWindow(hBtn, FALSE);
+
+        CheckRadioButton(hDlg, IDC_RADIO_FEMALE, IDC_RADIO_MALE, IDC_RADIO_FEMALE); // 여성 남성을 그룹화, 여성 버튼을 default로 체크
+
+        // 0712
+        hCombo = GetDlgItem(hDlg, IDC_COMBO_LIST);
+        hList = GetDlgItem(hDlg, IDC_LIST_NAME);
+
+    }
+    return 1;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        // 콤보 버튼, 회원 이름 및 명단
+        case IDC_BUTTON_INSERT:
+            GetDlgItemText(hDlg, IDC_EDIT_NAME, name, 20);
+            if (_tcscmp(name, _T(""))) // 공백이 아닌 문자가 있을 때
+            {
+                SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)name);
+                SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)name);
+            }
+            break;
+        case IDC_BUTTON_DELETE:
+            SendMessage(hCombo, CB_DELETESTRING, selection, 0);
+            break;
+        case IDC_COMBO_LIST:
+            if (HIWORD(wParam) == CBN_SELCHANGE)
+            {
+                selection = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+            }
+            break;
+        case IDC_BUTTON_DELETE2:
+            SendMessage(hList, LB_DELETESTRING, selectionList, 0);
+            break;
+        case IDC_LIST_NAME:
+            if (HIWORD(wParam) == LBN_SELCHANGE)
+            {
+                selectionList = SendMessage(hList, LB_GETCURSEL, 0, 0);
+            }
+            break;
+
+        // 체크 버튼
+        case IDC_CHECK_READING:
+            Check[0] = 1 - Check[0];
+            break;
+        case IDC_CHECK_MUSIC:
+            Check[1] = 1 - Check[1];
+            break;
+        case IDC_CHECK_GAME:
+            Check[2] = 1 - Check[2];
+            break;
+
+        // 라디오 버튼
+        case IDC_RADIO_FEMALE:
+            Radio = 0;
+            break;
+        case IDC_RADIO_MALE:
+            Radio = 1;
+            break;
+        case IDC_BUTTON_OUTPUT:
+            _stprintf_s(output,
+                _T("선택한 취미는 %s %s %s 입니다.\r\n")
+                _T("선택한 성별은 %s 입니다."),
+                Check[0] ? hobby[0] : _T(""),
+                Check[1] ? hobby[1] : _T(""),
+                Check[2] ? hobby[2] : _T(""),
+                sex[Radio]);
+            SetDlgItemText(hDlg, IDC_EDIT_OUTPUT, output);
+            break;
+
+        // 텍스트 복사하기, 삭제하기
+        case IDC_BUTTON_COPY:
+        {
+            TCHAR str[100];
+            GetDlgItemText(hDlg, IDC_EDIT_INPUT, str, 100);
+            SetDlgItemText(hDlg, IDC_EDIT_COPY, str);
+        }
+        break;
+        case IDC_BUTTON_CLEAR:
+            SetDlgItemText(hDlg, IDC_EDIT_INPUT, _T(""));
+            SetDlgItemText(hDlg, IDC_EDIT_COPY, _T(""));
+            break;
+
+        // 시작, 중지, 출력
+        case IDC_START:
+        {
+            HDC hdc = GetDC(hDlg);
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Start"));
+            ReleaseDC(hDlg, hdc);
+
+            HWND hBtn = GetDlgItem(hDlg, IDC_START);
+            EnableWindow(hBtn, FALSE);
+
+            hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+            EnableWindow(hBtn, TRUE);
+        }
+        break;
+        case IDC_PAUSE:
+        {
+            HDC hdc = GetDC(hDlg);
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Pause"));
+            ReleaseDC(hDlg, hdc);
+
+            HWND hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+            EnableWindow(hBtn, FALSE);
+
+            hBtn = GetDlgItem(hDlg, IDC_START);
+            EnableWindow(hBtn, TRUE);
+        }
+        break;
+        case IDC_BUTTON_PRINT:
+        {
+            HDC hdc = GetDC(hDlg);
+            TextOut(hdc, 0, 0, _T("Print"), 5);
+
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Print"));
+
+            ReleaseDC(hDlg, hdc);
+        }
+        break;
+
+        // 확인, 취소 버튼
+        case IDOK:
+            EndDialog(hDlg, 0);
+            break;
+        case IDC_CANCEL:
+            EndDialog(hDlg, 0);
+            break;
+        }
+        break;
+    }
+    return 0;
 }

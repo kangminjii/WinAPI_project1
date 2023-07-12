@@ -13,7 +13,6 @@
 #define IDI_SMALL                       108
 #define IDC_WINAPIPROJECT1              109
 #define IDR_MAINFRAME                   128
-#define IDR_MENU1                       129
 #define IDD_DIALOG1                     132
 #define IDC_BUTTON_PRINT                1026
 #define IDC_BUTTON_END                  1027
@@ -31,6 +30,12 @@
 #define IDC_RADIO_MALE                  1040
 #define IDC_EDIT_OUTPUT                 1041
 #define IDC_BUTTON_OUTPUT               1042
+#define IDC_COMBO_LIST                  1044
+#define IDC_BUTTON_INSERT               1045
+#define IDC_BUTTON_DELETE               1046
+#define IDC_EDIT_NAME                   1047
+#define IDC_LIST_NAME                   1048
+#define IDC_BUTTON_DELETE2              1049
 #define ID_DRAW_CIRCLE                  32781
 #define ID_DRAW_RECTANGLE               32782
 #define ID_DRAW_STAR                    32783
@@ -49,7 +54,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32800
-#define _APS_NEXT_CONTROL_VALUE         1043
+#define _APS_NEXT_CONTROL_VALUE         1050
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
