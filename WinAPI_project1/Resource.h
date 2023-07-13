@@ -36,6 +36,8 @@
 #define IDC_EDIT_NAME                   1047
 #define IDC_LIST_NAME                   1048
 #define IDC_BUTTON_DELETE2              1049
+#define IDC_LIST_MEMBER                 1050
+#define IDC_BUTTON_INSERT_MEMBER        1051
 #define ID_DRAW_CIRCLE                  32781
 #define ID_DRAW_RECTANGLE               32782
 #define ID_DRAW_STAR                    32783
@@ -54,7 +56,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32800
-#define _APS_NEXT_CONTROL_VALUE         1050
+#define _APS_NEXT_CONTROL_VALUE         1052
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
