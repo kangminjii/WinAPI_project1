@@ -3,15 +3,22 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "framework.h"
 #include "WinAPI_project1.h"
+#include <CommCtrl.h>
 
 #define MAX_LOADSTRING 100
-#define timer_ID_1 11
-#define timer_ID_2 12
 
-// 전역 변수:
-HINSTANCE hInst;                                // 현재 인스턴스입니다.
-WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
-WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
+HWND hModalessDlg; // 0713
+BOOL CALLBACK Dialog_Test1_Proc(HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam);
+
+void MakeColumn(HWND hDlg);
+void InsertData(HWND hDlg);
+
+
+// 0714
+HWND ChildWnd[2];
+LRESULT CALLBACK    ChildWndProc1(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK    ChildWndProc2(HWND, UINT, WPARAM, LPARAM);
+
 
 // >> : BITMAP
 #pragma comment(lib, "msimg32.lib")
@@ -38,11 +45,6 @@ int curframe = RUN_FRAME_MIN;
 
 int SPRITE_FRAME_COUNT_X = 0;
 int SPRITE_FRAME_COUNT_Y = 0;
-// << : ANI
-
-// >> : Text
-RECT rectView;
-// << : Text
 
 // >> : FUNC
 void CreateBitmap();
@@ -51,9 +53,6 @@ void DeleteBitmap();
 void UpdateFrame(HWND hWnd);
 void DrawRectText(HDC hdc);
 VOID CALLBACK AniProc(HWND hWnd, UINT uMsg, UINT idEvent, DWORD dwTime);
-
-void Update();
-void Render();
 // << : FUNC
 
 // >> : Double Buffering
@@ -61,6 +60,13 @@ HBITMAP hDoubleBufferImage;
 void DrawBitmapDoubleBuffering(HWND hWnd, HDC hdc);
 // << : Double Buffering
 
+RECT rectView;
+
+
+// 전역 변수:
+HINSTANCE hInst;                                // 현재 인스턴스입니다.
+WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
+WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -95,15 +101,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MSG msg;
 
     // 기본 메시지 루프입니다:
-    /*while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }*/
-
     while (true)
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -148,8 +145,22 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINAPIPROJECT1);
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    
+    // 0714
+    RegisterClassExW(&wcex);
 
-    return RegisterClassExW(&wcex);
+    // split window 1
+    wcex.lpfnWndProc = ChildWndProc1;
+    wcex.lpszMenuName = NULL;
+    wcex.lpszClassName = _T("Child Window Class 1");
+    RegisterClassExW(&wcex); // 윈도우 등록
+    // split window 2
+    wcex.lpfnWndProc = ChildWndProc2;
+    wcex.lpszMenuName = NULL;
+    wcex.lpszClassName = _T("Child Window Class 2");
+    RegisterClassExW(&wcex); // 윈도우 등록
+
+    return NULL;
 }
 
 //
@@ -167,7 +178,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
     HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        300, 100, 1000, 1000, nullptr, nullptr, hInstance, nullptr);
+        300, 300, 800, 800, nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd)
     {
@@ -194,36 +205,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     PAINTSTRUCT ps;
     HDC hdc;
-    static POINT ptCurPos;
-
 
     switch (message)
     {
-    case WM_SIZE: // 창 크기를 변경할때마다 호출됨
-        GetClientRect(hWnd, &rectView);
-        break;
     case WM_CREATE: // 초기화 값 세팅
-        ptCurPos.x = 0;
-        ptCurPos.y = 0;
         GetClientRect(hWnd, &rectView);
         CreateBitmap();
-        SetTimer(hWnd, timer_ID_2, 30, AniProc);
-        break;
-    case WM_TIMER: // 타이머 이벤트, 타이머는 일이 바쁘지 않을때만 잘 작동됨
-    {
-        if (wParam == timer_ID_1)
+
+        // >> : split window
         {
-            ptCurPos.x += 20;
-            InvalidateRect(hWnd, NULL, TRUE);
+            ChildWnd[0] = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Child Window Class 1"), NULL, WS_CHILD | WS_VISIBLE, 
+                0, 0, rectView.right, rectView.bottom/2 -1, hWnd, NULL, hInst, NULL);
+            ChildWnd[1] = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Child Window Class 2"), NULL, WS_CHILD | WS_VISIBLE,
+                0, rectView.bottom / 2 + 1, rectView.right, rectView.bottom / 2 - 1, hWnd, NULL, hInst, NULL);
         }
-    }
-    break;
+
+        //SetTimer(hWnd, 11, 30, AniProc);
+        break;
+
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
         // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
+        case ID_COPY_DIALOG:
+            // 다이얼로그 박스를 띄우는 메뉴
+            //DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dialog_Test1_Proc);
+
+            // 0713
+            hModalessDlg = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dialog_Test1_Proc);
+            ShowWindow(hModalessDlg, SW_SHOW);
+            break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
@@ -235,19 +248,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
-    case WM_PAINT:
+
+    /*case WM_PAINT:
     {
         hdc = BeginPaint(hWnd, &ps);
 
-       // DrawBitmap(hWnd, hdc);
         DrawBitmapDoubleBuffering(hWnd, hdc);
-        DrawRectText(hdc); // 이미지 이후에 텍스트가 출력되도록
 
         EndPaint(hWnd, &ps);
     }
-    break;
+    break;*/
     case WM_DESTROY:
-        KillTimer(hWnd, timer_ID_1);
+        //KillTimer(hWnd, 11);
         DeleteBitmap();
         PostQuitMessage(0);
         break;
@@ -275,6 +287,217 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+// 다이얼로그1
+BOOL CALLBACK Dialog_Test1_Proc(HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam)
+{
+    // 0710
+    static int Check[3], Radio;
+    TCHAR hobby[][30] = { _T("독서"), _T("음악감상"), _T("게임") };
+    TCHAR sex[][30] = { _T("여성"), _T("남성") };
+    TCHAR output[200];
+
+    // 0712
+    static HWND hCombo;
+    static int selection;
+    TCHAR name[20];
+
+    static HWND hList;
+    static int selectionList;
+
+
+
+    switch (iMsg)
+    {
+    case WM_INITDIALOG:
+    {
+        // 0710
+        HWND hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+        EnableWindow(hBtn, FALSE);
+
+        CheckRadioButton(hDlg, IDC_RADIO_FEMALE, IDC_RADIO_MALE, IDC_RADIO_FEMALE); // 여성 남성을 그룹화, 여성 버튼을 default로 체크
+
+        // 0712
+        hCombo = GetDlgItem(hDlg, IDC_COMBO_LIST);
+        hList = GetDlgItem(hDlg, IDC_LIST_NAME);
+
+        // 0713
+        MakeColumn(hDlg);
+
+    }
+    return 1;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+            // 0713 
+        case IDC_BUTTON_INSERT_MEMBER:
+            InsertData(hDlg);
+            break;
+
+            // 0712 콤보 버튼, 회원 이름 및 명단
+        case IDC_BUTTON_INSERT:
+            GetDlgItemText(hDlg, IDC_EDIT_NAME, name, 20);
+            if (_tcscmp(name, _T(""))) // 공백이 아닌 문자가 있을 때
+            {
+                SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)name);
+                SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)name);
+            }
+            break;
+        case IDC_BUTTON_DELETE:
+            SendMessage(hCombo, CB_DELETESTRING, selection, 0);
+            break;
+        case IDC_COMBO_LIST:
+            if (HIWORD(wParam) == CBN_SELCHANGE)
+            {
+                selection = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+            }
+            break;
+        case IDC_BUTTON_DELETE2:
+            SendMessage(hList, LB_DELETESTRING, selectionList, 0);
+            break;
+        case IDC_LIST_NAME:
+            if (HIWORD(wParam) == LBN_SELCHANGE)
+            {
+                selectionList = SendMessage(hList, LB_GETCURSEL, 0, 0);
+            }
+            break;
+
+            // 체크 버튼
+        case IDC_CHECK_READING:
+            Check[0] = 1 - Check[0];
+            break;
+        case IDC_CHECK_MUSIC:
+            Check[1] = 1 - Check[1];
+            break;
+        case IDC_CHECK_GAME:
+            Check[2] = 1 - Check[2];
+            break;
+
+            // 라디오 버튼
+        case IDC_RADIO_FEMALE:
+            Radio = 0;
+            break;
+        case IDC_RADIO_MALE:
+            Radio = 1;
+            break;
+        case IDC_BUTTON_OUTPUT:
+            _stprintf_s(output,
+                _T("선택한 취미는 %s %s %s 입니다.\r\n")
+                _T("선택한 성별은 %s 입니다."),
+                Check[0] ? hobby[0] : _T(""),
+                Check[1] ? hobby[1] : _T(""),
+                Check[2] ? hobby[2] : _T(""),
+                sex[Radio]);
+            SetDlgItemText(hDlg, IDC_EDIT_OUTPUT, output);
+            break;
+
+            // 텍스트 복사하기, 삭제하기
+        case IDC_BUTTON_COPY:
+        {
+            TCHAR str[100];
+            GetDlgItemText(hDlg, IDC_EDIT_INPUT, str, 100);
+            SetDlgItemText(hDlg, IDC_EDIT_COPY, str);
+        }
+        break;
+        case IDC_BUTTON_CLEAR:
+            SetDlgItemText(hDlg, IDC_EDIT_INPUT, _T(""));
+            SetDlgItemText(hDlg, IDC_EDIT_COPY, _T(""));
+            break;
+
+            // 시작, 중지, 출력
+        case IDC_START:
+        {
+            HDC hdc = GetDC(hDlg);
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Start"));
+            ReleaseDC(hDlg, hdc);
+
+            HWND hBtn = GetDlgItem(hDlg, IDC_START);
+            EnableWindow(hBtn, FALSE);
+
+            hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+            EnableWindow(hBtn, TRUE);
+        }
+        break;
+        case IDC_PAUSE:
+        {
+            HDC hdc = GetDC(hDlg);
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Pause"));
+            ReleaseDC(hDlg, hdc);
+
+            HWND hBtn = GetDlgItem(hDlg, IDC_PAUSE);
+            EnableWindow(hBtn, FALSE);
+
+            hBtn = GetDlgItem(hDlg, IDC_START);
+            EnableWindow(hBtn, TRUE);
+        }
+        break;
+        case IDC_BUTTON_PRINT:
+        {
+            HDC hdc = GetDC(hDlg);
+            TextOut(hdc, 0, 0, _T("Print"), 5);
+
+            SetDlgItemText(hDlg, IDC_TEXT, _T("Print"));
+
+            ReleaseDC(hDlg, hdc);
+        }
+        break;
+
+        // 확인, 취소 버튼
+        case IDOK:
+            //EndDialog(hDlg, 0);
+            DestroyWindow(hDlg);
+            hDlg = NULL;
+            break;
+        case IDC_CANCEL:
+            //EndDialog(hDlg, 0);
+            DestroyWindow(hDlg);
+            hDlg = NULL;
+            break;
+        }
+        break;
+    }
+    return 0;
+}
+
+void MakeColumn(HWND hDlg)
+{
+    LPCTSTR name[2] = { _T("이름"), _T("전화번호") };
+    LVCOLUMN lvCol = { 0, };
+    HWND hList;
+
+    hList = GetDlgItem(hDlg, IDC_LIST_MEMBER);
+    lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvCol.fmt = LVCFMT_LEFT;
+
+    for (int i = 0; i < 2; i++)
+    {
+        lvCol.cx = 90;
+        lvCol.iSubItem = i;
+        lvCol.pszText = (LPWSTR)name[i];
+        SendMessage(hList, LVM_INSERTCOLUMN, (WPARAM)i, (LPARAM)&lvCol);
+    }
+}
+
+void InsertData(HWND hDlg)
+{
+    LVITEM item;
+    HWND hList;
+    LPCTSTR name[20] = { _T("김철수"), _T("김영희") };
+    LPCTSTR phone[20] = { _T("010-1111-3333"), _T("010-2222-4444") };
+
+    hList = GetDlgItem(hDlg, IDC_LIST_MEMBER);
+
+    for (int i = 0; i < 2; i++)
+    {
+        item.mask = LVIF_TEXT;
+        item.iItem = i;
+        item.iSubItem = 0;
+        item.pszText = (LPWSTR)name[i];
+        ListView_InsertItem(hList, &item);
+        ListView_SetItemText(hList, i, 1, (LPWSTR)phone[i]);
+    }
 }
 
 void CreateBitmap()
@@ -470,7 +693,7 @@ void DrawBitmapDoubleBuffering(HWND hWnd, HDC hdc)
 
         Ellipse(hMemDC2, 250, 100, 750, 500);
 
-        SelectObject(hMemDC2 ,oldBrush);
+        SelectObject(hMemDC2, oldBrush);
         DeleteObject(hBrush);
 
         TransparentBlt(hMemDC, 0, 0, bx, by, hMemDC2, 0, 0, bx, by, RGB(255, 0, 255));
@@ -518,20 +741,84 @@ VOID CALLBACK AniProc(HWND hWnd, UINT uMsg, UINT idEvent, DWORD dwTime)
     if (yPos > rectView.bottom) yPos = 0;
 }
 
-/*
-Q1. 다음 세가지 게임 중 하나를 선택해서 프로그램을 작성하라.
+#define IDC_CHILD1_BTN 2000
 
-    1. 스네이크 게임 p.125 참고
+LRESULT CALLBACK ChildWndProc1(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    HWND hBtn;
+    static bool bToggle = false;
+   
+    switch (message)
+    {
+    case WM_CREATE:
+        SetTimer(hWnd, 11, 30, AniProc);
+        
+        hBtn = CreateWindow(_T("button"), _T("OK"), WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+            200, 10, 100, 30, hWnd, (HMENU)IDC_CHILD1_BTN, hInst, NULL);
 
-    2. 벽돌깨기 게임
+        break;
+    case WM_PAINT:
+    {
+        HDC hdc;
+        PAINTSTRUCT ps;
 
-    3. 디펜스 게임
+        hdc = BeginPaint(hWnd, &ps);
 
-    게임 타이틀 출력 -> Press Any Key
-        아이디 입력
+        DrawBitmapDoubleBuffering(hWnd, hdc);
+        if (bToggle)
+            TextOut(hdc, 200, 50, _T("Button Clicked"), 14);
 
-    본 게임 진행
+        EndPaint(hWnd, &ps);
+    }
+    break;
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDC_CHILD1_BTN:
+            bToggle = !bToggle;
+            break;
+        }
+        break;
+    case WM_DESTROY:
+        KillTimer(hWnd, 11);
+        break;
+    }
+    return DefWindowProc(hWnd, message, wParam, lParam);
+}
 
-    게임 결과 출력 -> 점수, 랭킹
-        파일 입/출력
-*/
+LRESULT CALLBACK ChildWndProc2(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    static POINT ptMouse;
+
+    switch (message)
+    {
+    case WM_CREATE:
+        break;
+    case WM_COMMAND:
+        break;
+    case WM_MOUSEMOVE:
+        GetCursorPos(&ptMouse);
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+
+        HDC hdc = BeginPaint(hWnd, &ps);
+        TCHAR str[128];
+        wsprintf(str, TEXT("WORLD POSITION : (%04d, %04d)"), ptMouse.x, ptMouse.y);
+        TextOut(hdc, 10, 30, str, lstrlen(str));
+
+        ScreenToClient(hWnd, &ptMouse);
+
+        wsprintf(str, TEXT("LOCAL POSITION : (%04d, %04d)"), ptMouse.x, ptMouse.y);
+        TextOut(hdc, 10, 50, str, lstrlen(str));
+
+        EndPaint(hWnd, &ps);
+    }
+        break;
+    case WM_DESTROY:
+        break;
+    }
+    return DefWindowProc(hWnd, message, wParam, lParam);
+}

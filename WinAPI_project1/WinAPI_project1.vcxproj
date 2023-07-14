@@ -176,7 +176,12 @@
     <ClCompile Include="20230712_dialog_기능들.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="20230713.cpp" />
+    <ClCompile Include="20230713_list_control.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="20230714_윈도우분리.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="Circle.cpp" />
     <ClCompile Include="Square.cpp" />
     <ClCompile Include="Star.cpp" />
